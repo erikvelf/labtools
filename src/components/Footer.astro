@@ -1,0 +1,61 @@
+---
+import { ui, type Lang } from '../i18n';
+import { site } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const s = ui[lang];
+// en-GB gives "22 October 2026" (day first), matching the Italian order.
+const publishedText = new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : lang, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+}).format(new Date(site.published));
+---
+
+<footer class="footer">
+  <div class="container inner">
+    <span class="links">
+      <span>
+        {s.madeBy} <a href={site.authorUrl} target="_blank" rel="noopener">{site.author}</a>
+      </span>
+      <span aria-hidden="true">·</span>
+      <span>{s.published} <time datetime={site.published}>{publishedText}</time></span>
+    </span>
+    <span class="links">
+      <a href={site.repo} target="_blank" rel="noopener">GitHub</a>
+      <span aria-hidden="true">·</span>
+      <span>MIT</span>
+    </span>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .inner {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  a {
+    color: var(--blue);
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  .links {
+    display: flex;
+    gap: 8px;
+  }
+</style>

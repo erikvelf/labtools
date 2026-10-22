@@ -1,0 +1,141 @@
+---
+import type { Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+const content = {
+  it: {
+    whatTitle: 'Cos’è',
+    what: [
+      'LabTools raccoglie in un unico posto gli strumenti che uso (e che ho scritto) per il laboratorio: elaborazione dei segnali, ritocco delle foto per le relazioni, disegno di schemi. È anche un archivio dei siti e delle risorse che ci danno i professori di Elettronica, Automazione e TPSE.',
+      'Ogni strumento gira interamente nel tuo browser: i file non lasciano mai il tuo computer. Non serve un account e non c’è niente da installare.',
+      'Tutto il software è open source, e non vive solo nel browser: ogni strumento si può usare anche direttamente sul computer, Linux compreso. L’ho reso open source perché credo che possa aiutare chi cerca una base del genere per la propria app o per un miglioramento, e in generale per dare una mano agli altri.',
+    ],
+    howTitle: 'Come funziona',
+    how: [
+      ['Scegli', 'uno strumento dalla griglia.'],
+      ['Si apre', 'nel browser e si carica una volta sola.'],
+      ['Lavori offline:', 'l’elaborazione avviene sul tuo computer, anche con WebAssembly.'],
+    ],
+    storyTitle: 'Perché è nato',
+    story: [
+      'Su Linux mi mancavano tre cose. Un programma semplice come MS Paint, ma che potessi modificare facilmente e che non fosse solo raster: Paint trasforma subito ogni tratto in pixel, e dopo non puoi più spostarlo né modificarlo. Un editor di foto come quelli dei telefoni, per raddrizzare un’immagine o annotarla con delle forme. E, da quando in quarta all’ITIS lavoriamo con gli oscilloscopi analogici, un modo per fotografare la traccia: il fascio è così veloce che la fotocamera digitale ne coglie solo una parte, metà della traccia sparisce e l’immagine viene peggio.',
+      'Così ho scritto i miei strumenti, uno alla volta, come app desktop per Linux. Linux è il sistema operativo che uso e a cui tengo, e credo che tutti ne trarrebbero beneficio se ci fossero più app come queste. Avendoli scritti con Tauri, ho potuto portarli facilmente sul web: girano nel browser e usano la potenza del tuo computer, senza installare niente.',
+      'Poi ho avuto l’idea di riunirli tutti in un sito, per aiutare gli altri (i compagni di oggi, quelli di domani e quelli delle classi precedenti) a realizzare meglio i lavori in digitale, per esempio i disegni di massima che facciamo in automazione. Li condivido e li rendo open source perché ci credo: il mio codice ha più valore se aiuta anche qualcun altro.',
+    ],
+    roadmapTitle: 'Prossimi sviluppi',
+    roadmap: 'Non lo so ancora: il tempo farà emergere nuove esigenze.',
+  },
+  en: {
+    whatTitle: 'What is it',
+    what: [
+      'LabTools collects in one place the tools I use (and wrote) for the lab: signal processing, touching up photos for reports, sketching diagrams. It’s also an archive of the websites and resources our Electronics, Automation and TPSE teachers give us.',
+      'Every tool runs entirely in your browser: your files never leave your computer. No account needed and nothing to install.',
+      'All of the software is open source, and it doesn’t only live in the browser: every tool also runs directly on your computer, Linux included. I made it open source because I believe it can help anyone looking for a base like this for their own app or improvement, and more generally to help others.',
+    ],
+    howTitle: 'How it works',
+    how: [
+      ['Pick', 'a tool from the grid.'],
+      ['It opens', 'in your browser and loads only once.'],
+      ['Work offline:', 'processing happens on your computer, with WebAssembly where needed.'],
+    ],
+    storyTitle: 'Why it exists',
+    story: [
+      'On Linux I was missing three things. A simple program like MS Paint that I could easily change, and that wasn’t raster-only: Paint turns every stroke into pixels straight away, so afterwards you can’t move or edit it. A photo editor like the ones on phones, to straighten a picture or mark it up with shapes. And, since we started working with analog oscilloscopes in my fourth year at technical school (ITIS), a way to photograph the trace: the beam moves so fast that a digital camera only catches part of it, half the trace fades out and the picture comes out worse.',
+      'So I wrote my own tools, one at a time, as Linux desktop apps. Linux is the operating system I use and value, and I believe everyone would benefit if more apps like these existed for it. Because I had built them with Tauri, I could easily bring them to the web: they run in your browser and use your own computer’s power, with nothing to install.',
+      'Then I had the idea of gathering them all in one website, to help others (today’s classmates, tomorrow’s, and those from earlier years) do better digital work, for example the rough technical sketches we draw in automation class. I share them as open source because I believe in it: my code is worth more when it helps someone else too.',
+    ],
+    roadmapTitle: 'What’s next',
+    roadmap: 'I don’t know yet: time will bring new needs.',
+  },
+}[lang];
+
+---
+
+<section class="about" id="about">
+  <div class="container grid">
+    <div class="block">
+      <h2>{content.whatTitle}</h2>
+      {content.what.map((p) => <p>{p}</p>)}
+    </div>
+
+    <div class="block">
+      <h2>{content.howTitle}</h2>
+      <ol class="steps">
+        {
+          content.how.map(([strong, rest], i) => (
+            <li>
+              <span class="num">{String(i + 1).padStart(2, '0')}</span>
+              <span>
+                <strong>{strong}</strong> {rest}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <div class="block">
+      <h2>{content.storyTitle}</h2>
+      {content.story.map((p) => <p>{p}</p>)}
+    </div>
+
+    <div class="block">
+      <h2>{content.roadmapTitle}</h2>
+      <p>{content.roadmap}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about {
+    border-top: 1px solid var(--border);
+    padding: 64px 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 48px 64px;
+  }
+  h2 {
+    margin: 0 0 14px;
+    font-size: 24px;
+  }
+  p {
+    margin: 0 0 12px;
+  }
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .steps li {
+    display: flex;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .steps li:last-child {
+    border-bottom: 0;
+  }
+  .num {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--blue);
+    padding-top: 2px;
+  }
+  .steps strong {
+    color: var(--strong);
+  }
+
+  @media (max-width: 760px) {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+  }
+</style>

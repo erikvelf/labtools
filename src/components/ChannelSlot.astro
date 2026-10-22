@@ -1,0 +1,117 @@
+---
+import { ui, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  channel: number;
+  hidden?: boolean;
+}
+
+const { lang, channel, hidden } = Astro.props;
+const s = ui[lang];
+
+// Waveform drawn on hover, sampled into a polyline over a 300×40 box.
+const W = 300;
+const MID = 20;
+const AMP = 12;
+const PERIOD = 75;
+const waves = {
+  sine: (x: number) => Math.sin((2 * Math.PI * x) / PERIOD),
+  square: (x: number) => (x % PERIOD < PERIOD / 2 ? 1 : -1),
+  saw: (x: number) => ((x % PERIOD) / PERIOD) * 2 - 1,
+  triangle: (x: number) => 1 - 4 * Math.abs(((x / PERIOD + 0.25) % 1) - 0.5),
+};
+const kinds = Object.keys(waves) as (keyof typeof waves)[];
+const wave = waves[kinds[channel % kinds.length]];
+const points = Array.from({ length: 121 }, (_, i) => {
+  const x = (i / 120) * W;
+  return `${x.toFixed(1)},${(MID - AMP * wave(x)).toFixed(1)}`;
+}).join(' ');
+---
+
+<div class="slot" data-slot aria-hidden="true" hidden={hidden}>
+  <span class="label"><b>CH {String(channel).padStart(2, '0')}</b> · {s.noSignal}</span>
+  <span class="hint">{s.comingSoon}</span>
+  <svg viewBox="0 0 300 40" preserveAspectRatio="none">
+    <line class="flat" x1="0" y1="20" x2="300" y2="20"></line>
+    <polyline class="wave" points={points} pathLength="1"></polyline>
+  </svg>
+</div>
+
+<style>
+  .slot {
+    position: relative;
+    min-height: 68px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .slot:hover {
+    border-color: var(--cyan-line);
+  }
+  .label,
+  .hint {
+    position: absolute;
+    top: 8px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+  }
+  .label {
+    left: 12px;
+    color: var(--muted);
+  }
+  .label b {
+    font-weight: 600;
+    color: var(--text);
+  }
+  .hint {
+    right: 12px;
+    color: var(--cyan);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .slot:hover .hint {
+    opacity: 1;
+  }
+  svg {
+    position: absolute;
+    left: 0;
+    bottom: 6px;
+    width: 100%;
+    height: 34px;
+    overflow: visible;
+  }
+  line,
+  polyline {
+    fill: none;
+    stroke-width: 1.5;
+  }
+  /* Not on the wave: non-scaling strokes measure dashes in screen pixels, which breaks
+     the pathLength="1" sweep whenever the slot isn't exactly 300px wide. */
+  line {
+    vector-effect: non-scaling-stroke;
+  }
+  /* Dotted, so it reads as an idle trace rather than a divider. */
+  .flat {
+    stroke: var(--border);
+    stroke-dasharray: 2 4;
+    transition: opacity 0.2s;
+  }
+  .slot:hover .flat {
+    opacity: 0;
+  }
+  /* The sweep: the wave is hidden behind a dash and drawn left to right on hover. */
+  .wave {
+    stroke: var(--cyan);
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 0.25s ease-in;
+  }
+  .slot:hover .wave {
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.7s linear;
+  }
+</style>

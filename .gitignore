@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.astro/
+.superpowers/
+.context-engine/
+.DS_Store
+
+# env / secrets
+.env*
+!.env.example
+.dev.vars*
+
+# cloudflare
+.wrangler/

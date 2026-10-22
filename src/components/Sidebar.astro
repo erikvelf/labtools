@@ -1,0 +1,224 @@
+---
+import { t, ui, type Lang } from '../i18n';
+import { siteCategories } from '../data/sites';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const s = ui[lang];
+
+/** "https://www.falstad.com/circuit/" → "falstad.com" */
+const domain = (url: string) => new URL(url).hostname.replace(/^(www|app)\./, '');
+---
+
+<aside class="sidebar" id="sites" aria-labelledby="sites-heading">
+  <h2 id="sites-heading">{s.sitesHeading}</h2>
+  {
+    siteCategories.map((cat) => (
+      <details class="panel" data-category open>
+        <summary>
+          <span class="label">
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            {t(cat.name, lang)}
+          </span>
+          <span class="count" data-count>{String(cat.sites.length).padStart(2, '0')}</span>
+        </summary>
+        <ul>
+          {cat.sites.map((site) => (
+            <li data-search={`${site.name} ${domain(site.url)} ${site.description.it} ${site.description.en} ${cat.name.it} ${cat.name.en}`.toLowerCase()}>
+              <a href={site.url} target="_blank" rel="noopener">
+                <span class="name">
+                  {site.name}
+                  <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 17 17 7M8 7h9v9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <span class="domain">{domain(site.url)}</span>
+              </a>
+              <span class="tip" role="tooltip">{t(site.description, lang)}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
+    ))
+  }
+</aside>
+
+<style>
+  .sidebar {
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+    align-self: start;
+    /* Sticky creates its own stacking context, so the description tooltips can only
+       rise above the tool cards if the whole sidebar does. Stays below the header (50). */
+    z-index: 30;
+  }
+  h2 {
+    margin: 0 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .panel {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .panel + .panel {
+    margin-top: 10px;
+  }
+  summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--surface);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary:hover {
+    color: var(--strong);
+  }
+  .panel[open] summary {
+    border-bottom: 1px solid var(--border);
+  }
+  .panel:not([open]) summary {
+    border-radius: var(--radius);
+  }
+  .label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chevron {
+    transition: transform 0.15s;
+  }
+  .panel[open] .chevron {
+    transform: rotate(90deg);
+  }
+  .count {
+    font-family: var(--mono);
+    color: var(--cyan);
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    position: relative;
+  }
+  li + li {
+    border-top: 1px solid var(--border);
+  }
+  li a {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    padding: 7px 12px;
+    transition:
+      background 0.15s,
+      box-shadow 0.15s;
+  }
+  li:last-child a {
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  li a:hover,
+  li a:focus-visible {
+    background: var(--surface);
+    box-shadow: inset 2px 0 0 var(--cyan);
+  }
+  .name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--strong);
+    white-space: nowrap;
+  }
+  .name svg {
+    color: var(--muted);
+  }
+  li a:hover .name svg {
+    color: var(--cyan);
+  }
+  .domain {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Description: a small tooltip to the right of the row. */
+  .tip {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 10px);
+    z-index: 20;
+    width: max-content;
+    max-width: 240px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    box-shadow: var(--shadow);
+    font-size: 12.5px;
+    color: var(--text);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-4px, -50%);
+    transition:
+      opacity 0.15s,
+      transform 0.15s,
+      visibility 0.15s;
+    pointer-events: none;
+  }
+  li:hover .tip,
+  li:focus-within .tip {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(0, -50%);
+    transition-delay: 0.2s;
+  }
+
+  @media (max-width: 860px) {
+    .sidebar {
+      position: static;
+    }
+    /* No room on the side: show the description under the row instead. */
+    .tip {
+      position: static;
+      display: block;
+      width: auto;
+      max-width: none;
+      padding: 0 12px 8px;
+      margin-top: -4px;
+      border: 0;
+      background: none;
+      box-shadow: none;
+      color: var(--muted);
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+  }
+</style>

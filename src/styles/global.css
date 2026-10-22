@@ -1,0 +1,108 @@
+/* Palette: technical blue for anything interactive, oscilloscope cyan for the signal. */
+:root {
+  --blue: #228be6;
+  --cyan: #0c8599;
+
+  --radius: 6px;
+  --radius-sm: 4px;
+  --header-h: 56px;
+  --font: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+
+  /* Light theme */
+  --bg: #ffffff;
+  --surface: #f8f9fa;
+  --surface-2: #f1f3f5;
+  --border: #dee2e6;
+  --text: #495057;
+  --strong: #212529;
+  --muted: #868e96;
+  --grid: #0000000d;
+  --shadow: 0 12px 32px #0000001f;
+  color-scheme: light;
+}
+
+/* Dark theme: graphite, from Mantine's darkest greys. */
+:root[data-theme='dark'] {
+  --bg: #141414;
+  --surface: #1b1b1b;
+  --surface-2: #242424;
+  --border: #2e2e2e;
+  --text: #c9c9c9;
+  --strong: #ffffff;
+  --muted: #828282;
+  --grid: #ffffff0b;
+  --shadow: 0 12px 32px #00000080;
+  --cyan: #3bc9db;
+  color-scheme: dark;
+}
+
+:root {
+  --cyan-soft: color-mix(in srgb, var(--cyan) 12%, transparent);
+  --cyan-line: color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 16px);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--strong);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 16px;
+  }
+}

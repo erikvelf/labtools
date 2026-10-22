@@ -1,0 +1,204 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from './Header.astro';
+import Hero from './Hero.astro';
+import Sidebar from './Sidebar.astro';
+import ToolCard from './ToolCard.astro';
+import ChannelSlot from './ChannelSlot.astro';
+import About from './About.astro';
+import Footer from './Footer.astro';
+import { ui, type Lang } from '../i18n';
+import { tools } from '../data/tools';
+import { site } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const s = ui[lang];
+
+// Empty "CH" slots fill the space next to a short tools list. The script below decides
+// how many are visible; without JavaScript the first row's worth is shown.
+const MAX_SLOTS = 9;
+const slotChannels = Array.from({ length: MAX_SLOTS }, (_, i) => tools.length + 1 + i);
+---
+
+<Base lang={lang} title={site.name} description={s.heroLead}>
+  <Header lang={lang} />
+  <main>
+    <Hero lang={lang} />
+
+    <div class="container layout">
+      <Sidebar lang={lang} />
+
+      <section id="tools" aria-labelledby="tools-heading">
+        <h2 id="tools-heading" class="section-title">{s.toolsHeading}</h2>
+        <div class="tools">
+          {tools.map((tool) => <ToolCard tool={tool} lang={lang} />)}
+          {slotChannels.map((channel, i) => <ChannelSlot lang={lang} channel={channel} hidden={i >= 3} />)}
+        </div>
+        <p class="no-results" id="no-results" hidden>
+          {s.noResults} “<span id="no-results-query"></span>”
+        </p>
+      </section>
+    </div>
+
+    <About lang={lang} />
+  </main>
+  <Footer lang={lang} />
+</Base>
+
+<script>
+  // Client-side search: hides tool cards and sites whose text doesn't match.
+  const input = document.getElementById('search') as HTMLInputElement | null;
+  const items = [...document.querySelectorAll<HTMLElement>('[data-search]')];
+  const categories = [...document.querySelectorAll<HTMLElement>('[data-category]')];
+  const noResults = document.getElementById('no-results');
+  const noResultsQuery = document.getElementById('no-results-query');
+
+  function filter(query: string) {
+    const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    let visible = 0;
+    for (const item of items) {
+      const match = words.every((w) => item.dataset.search!.includes(w));
+      item.hidden = !match;
+      if (match) visible++;
+    }
+    for (const cat of categories) {
+      const shown = cat.querySelectorAll('[data-search]:not([hidden])').length;
+      cat.hidden = shown === 0;
+      if (words.length && shown) (cat as HTMLDetailsElement).open = true;
+      const count = cat.querySelector('[data-count]');
+      if (count) count.textContent = String(shown).padStart(2, '0');
+    }
+    if (noResults && noResultsQuery) {
+      noResults.hidden = visible > 0;
+      noResultsQuery.textContent = query.trim();
+    }
+  }
+
+  input?.addEventListener('input', () => {
+    filter(input.value);
+    fillSlots();
+  });
+
+  // Equal-size tool cards: find the widest card's natural width and use it for all.
+  function sizeCards() {
+    const grid = document.querySelector<HTMLElement>('.tools');
+    if (!grid) return;
+    const cards = [...grid.querySelectorAll<HTMLElement>('.card')];
+    cards.forEach((c) => c.classList.add('measuring'));
+    const widest = Math.max(...cards.map((c) => c.getBoundingClientRect().width));
+    cards.forEach((c) => c.classList.remove('measuring'));
+    grid.style.setProperty('--card-w', `${Math.ceil(widest)}px`);
+  }
+  // Show at least one row of empty slots, then add rows until the cards reach the
+  // sidebar's bottom edge (at most two extra rows). None while searching.
+  function fillSlots() {
+    const grid = document.querySelector<HTMLElement>('.tools');
+    const sidebar = document.getElementById('sites');
+    if (!grid || !sidebar) return;
+    const slots = [...grid.querySelectorAll<HTMLElement>('[data-slot]')];
+    const show = (n: number) => slots.forEach((slot, i) => (slot.hidden = i >= n));
+
+    if (input?.value.trim()) return show(0);
+    const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+    if (cols === 1) return show(1);
+
+    const cards = grid.querySelectorAll('.card').length;
+    let n = (cols - (cards % cols)) % cols || cols;
+    const max = Math.min(slots.length, n + cols * 2);
+    show(n);
+    // The layout grid stretches both columns to equal height, so compare bottom edges.
+    // Only add a row when at least half a row of empty space is left.
+    const rowH = grid.querySelector('.card')?.getBoundingClientRect().height ?? 70;
+    const short = () => sidebar.getBoundingClientRect().bottom - grid.getBoundingClientRect().bottom > rowH / 2;
+    while (short() && n + cols <= max) {
+      n += cols;
+      show(n);
+    }
+  }
+
+  function layout() {
+    sizeCards();
+    fillSlots();
+  }
+  // Fonts change text width, so measure again once Inter has loaded.
+  layout();
+  document.fonts.ready.then(layout);
+  let resizeFrame = 0;
+  addEventListener('resize', () => {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(fillSlots);
+  });
+  // Opening or closing a sidebar panel changes its height.
+  document.querySelectorAll('#sites details').forEach((d) => d.addEventListener('toggle', fillSlots));
+
+  document.addEventListener('keydown', (e) => {
+    const target = e.target as HTMLElement;
+    const typing = target.closest('input, textarea, [contenteditable]');
+    if (e.key === '/' && !typing) {
+      e.preventDefault();
+      input?.focus();
+    } else if (e.key === 'Escape' && target === input) {
+      input.value = '';
+      filter('');
+      fillSlots();
+      input.blur();
+    }
+  });
+</script>
+
+<style>
+  .layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 48px;
+    padding-top: 48px;
+    padding-bottom: 72px;
+  }
+  .section-title {
+    margin: 0 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  /* Every card gets the size of the largest one: --card-w is measured by the script
+     above, and grid-auto-rows: 1fr makes all rows as tall as the tallest card. */
+  .tools {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, min(var(--card-w, 260px), 100%));
+    grid-auto-rows: 1fr;
+    gap: 12px;
+  }
+  .tools :global(.measuring) {
+    width: max-content;
+  }
+  .no-results {
+    padding: 24px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    text-align: center;
+    color: var(--muted);
+  }
+
+  @media (max-width: 860px) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 40px;
+      padding-top: 32px;
+    }
+    /* On narrow screens the tools come first, the sites after. */
+    #tools {
+      order: -1;
+    }
+  }
+  @media (max-width: 560px) {
+    .tools {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
